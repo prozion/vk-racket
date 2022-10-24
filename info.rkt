@@ -1,4 +1,4 @@
 #lang setup/infotab
 
 (define collection 'multi)
-(define deps '("odyssseus" "tabtree"))
+(define deps '("odysseus" "tabtree"))

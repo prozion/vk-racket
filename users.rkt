@@ -1,7 +1,7 @@
 #lang racket
 
 (require odysseus)
-(require odysseus/read/vk)
+(require "vk.rkt")
 
 (provide (all-defined-out))
 
