@@ -4,6 +4,9 @@
 (require json)
 (require compatibility/defmacro)
 (require odysseus)
+(require odysseus/json)
+(require odysseus/http)
+(require odysseus/optimize)
 
 (provide (all-defined-out))
 
@@ -39,7 +42,7 @@
 
 (define-catch (read-ids-from-file filename)
   (let ((ids-string (read-file filename)))
-    (split ids-string ",")))
+    (string-split ids-string ",")))
 
 ;;;;; User ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define special-values (list "<user-deactivated>"))
@@ -134,9 +137,9 @@
       id
       (let ((u (car (@. res.response))))
         (format "~a~a~a"
-                  (replace-all (@. u.first_name) " " glue)
+                  (string-replace (@. u.first_name) " " glue)
                   glue
-                  (replace-all (@. u.last_name) " " glue))))))
+                  (string-replace (@. u.last_name) " " glue))))))
 
 (define vk/username request-username)
 
@@ -168,6 +171,7 @@
     (if plain-name?
         (let* ((n (get-matches #px"^(id)(\\d+)$" ualias))
               (n (third (first n))))
+            (--- 111 ualias)
             n)
         (let* (
               (_ (when delay-time (sleep delay-time)))
@@ -175,9 +179,9 @@
                       (display display?)
                       (flush-output)))
               (res-user (string->jsexpr
-                          (get-url (format "https://api.vk.com/method/users.get?user_ids=~a&v=~a&access_token=~a" ualias VK_API_VERSION (_AT)))))
-              (result-user (and ($ response res-user) (not-empty? ($ response res-user)) ($ __id (first ($ response res-user))))))
-          (->string result-user)))))
+                          (get-url (format "https://api.vk.com/method/users.get?user_ids=~a&fields=~a&v=~a&access_token=~a" ualias "id" VK_API_VERSION (_AT)))))
+              (result-user (and ($ response res-user) (not-empty? ($ response res-user)) ($ id (first ($ response res-user))))))
+          (and result-user (->string result-user))))))
 
 (define get-uid get-user-id)
 
@@ -277,7 +281,7 @@
                 (res-group (string->jsexpr
                                   (get-url (format "https://api.vk.com/method/groups.getById?group_id=~a&v=~a&access_token=~a" galias VK_API_VERSION (_AT)))))
                 (result-group (and ($ response res-group) (not-empty? ($ response res-group)) ($ id (first ($ response res-group))))))
-            (->string result-group))))))
+            (and result-group (->string result-group)))))))
 
 (define get-group-id get-gid)
 
@@ -325,10 +329,10 @@
   (let* ((vk-url (->string vk-url))
         (vk-url (remove-vk-url-prefix vk-url)))
     (cond
-      ((raw-group? vk-url) (ltrim vk-url (len "club")))
-      ((raw-public? vk-url) (ltrim vk-url (len "public")))
-      ((raw-event? vk-url) (ltrim vk-url (len "event")))
-      ((raw-person? vk-url) (ltrim vk-url (len "id")))
+      ((raw-group? vk-url) (drop* vk-url (string-length "club")))
+      ((raw-public? vk-url) (drop* vk-url (string-length "public")))
+      ((raw-event? vk-url) (drop* vk-url (string-length "event")))
+      ((raw-person? vk-url) (drop* vk-url (string-length "id")))
       (else vk-url))))
 
 ; Функция по заданному id группы groupid возвращает список id ее участников.
@@ -517,7 +521,7 @@
 (define-catch (get-attachment-element attachments type)
   (let* (
         (elements (and attachments (filter-map (λ (x) (hash-ref* x type)) attachments)))
-        (element (and (not-empty? elements) (first elements)))
+        (element (and elements (not-empty? elements) (first elements)))
         (sizes (and
                   element
                   (cond
@@ -680,6 +684,8 @@
   (@. res.error.error_msg))
 
 (define-catch (get-post-text item)
+  ; (when (equal? ($ id item) 3794338)
+  ;   (--- "vk.rkt/get-post-text:" (repost? item) ($ copy_history.text item)))
   (cond
     ((repost? item) ($ copy_history.text item))
     (else ($ text item))))
