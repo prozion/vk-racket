@@ -171,7 +171,6 @@
     (if plain-name?
         (let* ((n (get-matches #px"^(id)(\\d+)$" ualias))
               (n (third (first n))))
-            (--- 111 ualias)
             n)
         (let* (
               (_ (when delay-time (sleep delay-time)))
@@ -237,7 +236,7 @@
 
 (define-catch (number-of-users filename)
   (let ((users (read-serialized-data-from-file filename)))
-    (--- (length (hash-keys users)))))
+    (length (hash-keys users))))
 
 ;;; Groups ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define (remove-vk-url-prefix url)
@@ -329,10 +328,10 @@
   (let* ((vk-url (->string vk-url))
         (vk-url (remove-vk-url-prefix vk-url)))
     (cond
-      ((raw-group? vk-url) (drop* vk-url (string-length "club")))
-      ((raw-public? vk-url) (drop* vk-url (string-length "public")))
-      ((raw-event? vk-url) (drop* vk-url (string-length "event")))
-      ((raw-person? vk-url) (drop* vk-url (string-length "id")))
+      ((raw-group? vk-url) (string-drop vk-url (string-length "club")))
+      ((raw-public? vk-url) (string-drop vk-url (string-length "public")))
+      ((raw-event? vk-url) (string-drop vk-url (string-length "event")))
+      ((raw-person? vk-url) (string-drop vk-url (string-length "id")))
       (else vk-url))))
 
 ; Функция по заданному id группы groupid возвращает список id ее участников.
@@ -609,7 +608,6 @@
         ; https://vk.com/dev/photos.delete?params[owner_id]=231485211&params[photo_id]=305326320&params[v]=5.107
         (let* (
               (_ (when count (count (+ (count) 1)) #t))
-              (_ (--- photo_id (when count (count))))
               ; (_ (--- group_id target_album_id photo_id VK_API_VERSION (_AT)))
               (reqstr (format "https://api.vk.com/method/photos.move?owner_id=-~a&target_album_id=~a&photo_id=~a&v=~a&access_token=~a"
                                 group_id
