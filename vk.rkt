@@ -279,6 +279,7 @@
                         (flush-output)))
                 (res-group (string->jsexpr
                                   (get-url (format "https://api.vk.com/method/groups.getById?group_id=~a&v=~a&access_token=~a" galias VK_API_VERSION (_AT)))))
+                ; (_ (--- res-group))
                 (result-group (and ($ response res-group) (not-empty? ($ response res-group)) ($ id (first ($ response res-group))))))
             (and result-group (->string result-group)))))))
 
